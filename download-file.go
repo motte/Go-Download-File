@@ -21,6 +21,7 @@ type WriteCounter struct {
 }
 
 var fileContentLength string
+var userInput string
 
 func (wc *WriteCounter) Write(p []byte) (int, error) {
 	n := len(p)
@@ -39,17 +40,35 @@ func (wc WriteCounter) PrintProgress() {
 }
 
 func main() {
-	fileURL := "https://www.wwf.org.au/Images/UserUploadedImages/416/img-koala-eating-leaf-queensland-1000px.jpg"
-	fileName := stringAfter(fileURL, "/")
-
-	fmt.Println("Started downloading", fileURL)
-
-	err := DownloadFile(fileName, fileURL)
-	if err != nil {
-		panic(err)
+	fileURLs := []string{}
+	if len(os.Args) > 1 {
+		// If there are script arguments passed from user.
+		for i, value := range os.Args {
+			if i != 0 {
+				fileURLs = append(fileURLs, value)
+			}
+		}
+	} else {
+		fileURLs = append(fileURLs, "https://www.nationalgeographic.com/content/dam/animals/2019/11/koala-australia-fires/koalas-australia-00523055.jpg")
 	}
 
-	fmt.Println("Finished downloading", fileName)
+	dirPath := "downloads"
+	if _, err := os.Stat(dirPath); os.IsNotExist(err) {
+		os.Mkdir(dirPath, 0700)
+	}
+
+	for _, value := range fileURLs {
+		fileName := "downloads/"
+		fileName += stringAfter(value, "/")
+		fmt.Println("Started downloading", value)
+
+		err := DownloadFile(fileName, value)
+		if err != nil {
+			panic(err)
+		}
+
+		fmt.Println("Finished downloading", fileName)
+	}
 }
 
 func stringAfter(value string, a string) string {
